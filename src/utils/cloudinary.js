@@ -7,7 +7,7 @@ cloudinary.config({
 console.log(cloudinary.config());
 
 
-const uploadImage = async (localFilePath) => {
+export const uploadImageCloudinary = async (localFilePath) => {
     const options = {
       use_filename: true,
       unique_filename: false,

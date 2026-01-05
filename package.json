@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon src/index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "vitest"
   },
   "keywords": [],
   "author": "",
@@ -13,7 +13,8 @@
   "type": "module",
   "devDependencies": {
     "nodemon": "^3.1.11",
-    "prettier": "^3.7.4"
+    "prettier": "^3.7.4",
+    "vitest": "^4.0.16"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",
@@ -25,6 +26,7 @@
     "jsonwebtoken": "^9.0.3",
     "mongoose": "^9.1.1",
     "mongoose-aggregate-paginate-v2": "^1.1.4",
-    "multer": "^2.0.2"
+    "multer": "^2.0.2",
+    "zod": "^4.3.5"
   }
 }
