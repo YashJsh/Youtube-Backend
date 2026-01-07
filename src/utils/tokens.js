@@ -1,10 +1,12 @@
-import { User } from "../models/user.model";
+import { User } from "../models/user.model.js";
 
 export const createAcessAndRefreshToken = async (userId)=>{
     try {
         const user = await User.findById(userId);
-        const accessToken = user.generateAcessToken;
-        const refreshToken = user.generateRefreshToken;
+        const accessToken = user.generateAccessToken();
+        console.log(accessToken);
+        const refreshToken = user.generateRefreshToken();
+        console.log(refreshToken);
         user.refreshToken = refreshToken;
         await user.save({
             validateBeforeSave : false

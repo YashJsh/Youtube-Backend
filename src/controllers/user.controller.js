@@ -20,15 +20,20 @@ export const registerUser = asyncHandler(async (req, res) => {
     const existedUser = await User.findOne({
         $or: [{ username }, { email }]
     })
+    console.log("Existed User is :",existedUser);
 
-    if (existedUser) {
+    if (existedUser) {  
         throw new APIError(409, "User with email or username already exists")
     };
     //check for images
 
     console.log("Request files : ", req.files);
     const avatar_path = req.files?.avatar[0]?.path;
-    const coverImagePath = req.files?.coverImage[0]?.path;
+    let coverImagePath;
+    if (req.files && Array.isArray(req.files.coverImage) && req.files?.coverImage.length > 0){
+        coverImage = req.files.coverImage[0].path
+    }
+
     //check for avatar
     if (!avatar_path) {
         throw new APIError(400, "Avatar file is required")
@@ -42,6 +47,8 @@ export const registerUser = asyncHandler(async (req, res) => {
         throw new APIError(400, "Avatar uploading problem")
     };
 
+    console.log("Control reached after file upload");
+
     //creating user object - create entry in db
     const user = await User.create({
         email,
@@ -52,11 +59,14 @@ export const registerUser = asyncHandler(async (req, res) => {
         username: username.toLowerCase()
     })
 
+    console.log("User is : ", user);
+
     // remove password and refresh token field from response
     const createdUser = await User.findById(user._id)
         .select(
             "-password -refreshToken"
-        )
+        );
+    console.log("created User ",createdUser);
     // check if response exists or not
     if (!createdUser) {
         throw new APIError(500, "Something went wrong while creating/registering user");
@@ -70,7 +80,7 @@ export const registerUser = asyncHandler(async (req, res) => {
 export const loginUser = asyncHandler(async (req, res) => {
     const { email, username, password } = req.body;
     if (
-        !email || !username
+        !(email || username)
     ) {
         throw new APIError(400, "All fields are required")
     }
@@ -86,6 +96,7 @@ export const loginUser = asyncHandler(async (req, res) => {
         }
         ]
     });
+    console.log("User", user);
     //check user exists
     if (!user) {
         throw new APIError(404, "User doesn't exists")
@@ -97,7 +108,8 @@ export const loginUser = asyncHandler(async (req, res) => {
     }
     //access and refresh token
     const { accessToken, refreshToken } = await createAcessAndRefreshToken(user._id);
-
+    console.log(accessToken);
+    console.log(refreshToken);
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken");
 
     const options = {

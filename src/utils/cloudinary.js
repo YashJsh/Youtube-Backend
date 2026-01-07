@@ -1,16 +1,22 @@
 import { v2 as cloudinary} from "cloudinary";
 import fs from "fs";
+import dotenv from "dotenv";
+
+dotenv.config();
 
 cloudinary.config({
-    secure: true
+    secure: true,
+    api_key : process.env.CLOUDINARY_API_KEY,
+    api_secret : process.env.CLOUDINARY_API_SECRET,
+    cloud_name : process.env.CLOUDINARY_CLOUD_NAME,
 });
-console.log(cloudinary.config());
 
+console.log(cloudinary.config());
 
 export const uploadImageCloudinary = async (localFilePath) => {
     const options = {
       use_filename: true,
-      unique_filename: false,
+      unique_filename: true,
       overwrite: true,
     };
 
