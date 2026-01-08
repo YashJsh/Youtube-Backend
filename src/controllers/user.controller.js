@@ -158,3 +158,76 @@ export const logOutUser = asyncHandler(async (req, res) => {
             .clearCookie("refreshToken", options)
             .json(new APIresponse(200, {}, "User logged out successfully"))
 });
+
+export const getCurrentUser = asyncHandler(async(req, res)=>{
+    // const user = await User.findById(req.user?._id);
+    // if (!user){
+    //     throw new APIError(404, "User not found");
+    // }
+    return res.status(200).json(new APIresponse(200,
+        req.user,
+        "User fetched successfully"
+    ));
+});
+
+export const updateUserAvatar = asyncHandler(async (req, res)=>{
+    const localPath = req.file.path;
+    if (!localPath){
+        throw new APIError(404, "Aavatar file missing");
+    }
+    const avatar = await uploadImageCloudinary(localPath);
+    if (!avatar){
+        throw new APIError(400, "Error while uploading on avatar");
+    }
+    //update avatar;
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set : {
+            avatar : avatar.url
+        }
+    }, {new : true}).select("-password");
+
+    if (!user){
+        throw new Error(500, "Error in updating user")
+    }
+    
+    return res.status(200).json(new APIresponse(200, user, "Avatar updated successfully"))
+});
+
+export const updateCoverImage = asyncHandler(async (req, res)=>{
+    const localPath = req.file.path;
+    if (!localPath){
+        throw new APIError(404, "Cover file missing");
+    }
+    const coverImage = await uploadImageCloudinary(localPath);
+    if (!coverImage){
+        throw new APIError(400, "Error while uploading on Cover");
+    }
+    //update avatar;
+    const user = await User.findByIdAndUpdate(req.user?._id, {
+        $set : {
+            coverImage : coverImage.url
+        }
+    }, {new : true}).select("-password");
+
+    if (!user){
+        throw new Error(500, "Error in updating user")
+    }
+    return res.status(200).json(new APIresponse(200, user, "CoverImage updated successfully"))
+});
+
+export const changeCurrentPassword = asyncHandler(async(req, res)=>{
+    const { oldPassword, newPassword} = req.body;
+    if (!oldPassword || !newPassword){
+        throw new APIError(400, "Both password are required");
+    };
+    const user = await User.findById(req.user?._id);
+    const passwordCheck = await user.isPasswordCorrect(oldPassword);
+    if(!passwordCheck){
+        throw new APIError(400, "Invalid old password")
+    };
+
+    user.password = newPassword;
+    await user.save({validateBeforeSave : false});
+
+    return res.status(200).json(new APIresponse(200, {}, "Password Changed Successfully"))
+});
