@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js"
 import { uploadImageCloudinary } from "../utils/cloudinary.js";
 import { APIresponse } from "../utils/apiResponse.js";
 import { createAcessAndRefreshToken } from "../utils/tokens.js";
+import mongoose, { Mongoose } from "mongoose";
 
 export const registerUser = asyncHandler(async (req, res) => {
     //get user details
@@ -242,7 +243,7 @@ export const getUserChannelProfile = asyncHandler(async(req, res)=>{
         throw new APIError(400, "username is missing");
     };
     const channel = await User.aggregate([
-        {
+        {   
             $match : {
                 username : username?.toLowerCase()
             },
@@ -254,6 +255,7 @@ export const getUserChannelProfile = asyncHandler(async(req, res)=>{
                 as : "subscribers"
             },
         },{
+            //Search and get
             $lookup : {
                 from : "Subscription",
                 localField : "_id",
@@ -261,6 +263,7 @@ export const getUserChannelProfile = asyncHandler(async(req, res)=>{
                 as : "subscribedTo"
             },
         },{
+            // Adds a field in the document
             $addFields : {
                 subcribersCount : {
                     $size : "$subscribers"
@@ -279,6 +282,7 @@ export const getUserChannelProfile = asyncHandler(async(req, res)=>{
                 }
             }
         }, {
+            //It gives like what we want from the final result
             $project : {
                 fullName : 1,
                 userName : 1,
@@ -301,4 +305,52 @@ export const getUserChannelProfile = asyncHandler(async(req, res)=>{
         channel[0],
         "User channel Fetched Successfully"
     ));
+});
+
+const getWatchHistory =  asyncHandler (async(req, res)=>{
+    const user = await User.aggregate([
+        {
+            $match : {
+                _id : new mongoose.Types.ObjectId(req.user._id)
+            },
+        },
+        {
+            $lookup : {
+                from : "video",
+                localField : "watchHistory",
+                foreignField : "_id",
+                as : "watch_history",
+                pipeline : [
+                    {
+                        $lookup : {
+                            from : "users",
+                            localField : "owner",
+                            foreignField : "_id", 
+                            as : "owner",
+                            pipeline : [
+                                {
+                                    $project : {
+                                        fullName : 1,
+                                        avatar : 1,
+                                        username : 1,
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        $addFields : {
+                            owner : {
+                                $first : "$owner"
+                            }
+                        }
+                    }
+                ]
+            }
+        },
+        
+    ]);
+
+    console.log(user);
+    return res.status(200).json(new APIresponse(200, user[0].watchHistory, "Watched history fetched successfully"))
 });
