@@ -175,10 +175,13 @@ export const updateUserAvatar = asyncHandler(async (req, res)=>{
     if (!localPath){
         throw new APIError(404, "Aavatar file missing");
     }
+    //Old avatar to be deleted from cloudinary
+
     const avatar = await uploadImageCloudinary(localPath);
     if (!avatar){
         throw new APIError(400, "Error while uploading on avatar");
     }
+
     //update avatar;
     const user = await User.findByIdAndUpdate(req.user?._id, {
         $set : {
@@ -190,6 +193,7 @@ export const updateUserAvatar = asyncHandler(async (req, res)=>{
         throw new Error(500, "Error in updating user")
     }
     
+
     return res.status(200).json(new APIresponse(200, user, "Avatar updated successfully"))
 });
 
@@ -230,4 +234,71 @@ export const changeCurrentPassword = asyncHandler(async(req, res)=>{
     await user.save({validateBeforeSave : false});
 
     return res.status(200).json(new APIresponse(200, {}, "Password Changed Successfully"))
+});
+
+export const getUserChannelProfile = asyncHandler(async(req, res)=>{
+    const username = req.params;
+    if (!username?.trim()){
+        throw new APIError(400, "username is missing");
+    };
+    const channel = await User.aggregate([
+        {
+            $match : {
+                username : username?.toLowerCase()
+            },
+        },{
+            $lookup : {
+                from : "Subscription",
+                localField : "_id",
+                foreignField : "channel",
+                as : "subscribers"
+            },
+        },{
+            $lookup : {
+                from : "Subscription",
+                localField : "_id",
+                foreignField : "subscriber",
+                as : "subscribedTo"
+            },
+        },{
+            $addFields : {
+                subcribersCount : {
+                    $size : "$subscribers"
+                },
+                channelsSubscribedToCount : {
+                    $size : "$subscribedTo"
+                },
+                isSubscribed : {
+                    $condition : {
+                        if : {
+                            $in : [req.user?._id, "$subscribers.subscriber"],
+                        },
+                        then : true,
+                        else : false
+                    }
+                }
+            }
+        }, {
+            $project : {
+                fullName : 1,
+                userName : 1,
+                subscriberCount : 1,
+                subscribedTo : 1,
+                isSubscribed : 1,
+                avatar : 1,
+                coverImage : 1,
+                email : 1
+            }
+        }
+    ]);
+
+    console.log("channel : " , channel);
+    if (!channel.length){
+        throw new APIError(404, "Channel doesn't exists");
+    }
+    return res.status(200).json(new APIresponse(
+        200,
+        channel[0],
+        "User channel Fetched Successfully"
+    ));
 });
