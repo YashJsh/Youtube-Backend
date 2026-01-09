@@ -1,7 +1,7 @@
 import { APIError } from "../utils/apiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { User } from "../models/user.model.js"
-import { uploadImageCloudinary } from "../utils/cloudinary.js";
+import { deleteImageCloudinary, uploadImageCloudinary } from "../utils/cloudinary.js";
 import { APIresponse } from "../utils/apiResponse.js";
 import { createAcessAndRefreshToken } from "../utils/tokens.js";
 import mongoose, { Mongoose } from "mongoose";
@@ -55,7 +55,9 @@ export const registerUser = asyncHandler(async (req, res) => {
         email,
         fullName,
         avatar: avatar.url,
+        avatar_path : avatar.public_id,
         coverImage: coverImage?.url || "",
+        coverImagePath : coverImage?.public_id || "",
         password,
         username: username.toLowerCase()
     })
@@ -177,6 +179,7 @@ export const updateUserAvatar = asyncHandler(async (req, res)=>{
         throw new APIError(404, "Aavatar file missing");
     }
     //Old avatar to be deleted from cloudinary
+    const prevAvatar = req.user.avatar_path;
 
     const avatar = await uploadImageCloudinary(localPath);
     if (!avatar){
@@ -194,6 +197,11 @@ export const updateUserAvatar = asyncHandler(async (req, res)=>{
         throw new Error(500, "Error in updating user")
     }
     
+    //Delete avatar
+    const del = await deleteImageCloudinary(prevAvatar);
+    if (!del){
+        throw new Error(500, "Error in deleting avatar");
+    }
 
     return res.status(200).json(new APIresponse(200, user, "Avatar updated successfully"))
 });
@@ -203,6 +211,9 @@ export const updateCoverImage = asyncHandler(async (req, res)=>{
     if (!localPath){
         throw new APIError(404, "Cover file missing");
     }
+    //cover 
+    const coverpath = req.user.cover_id;
+
     const coverImage = await uploadImageCloudinary(localPath);
     if (!coverImage){
         throw new APIError(400, "Error while uploading on Cover");
@@ -216,7 +227,13 @@ export const updateCoverImage = asyncHandler(async (req, res)=>{
 
     if (!user){
         throw new Error(500, "Error in updating user")
-    }
+    };
+
+    const del =await deleteImageCloudinary(coverpath);
+    if (!del){
+        throw new Error(500, "Error in deleting avatar");
+    };
+
     return res.status(200).json(new APIresponse(200, user, "CoverImage updated successfully"))
 });
 

@@ -31,4 +31,15 @@ export const uploadImageCloudinary = async (localFilePath) => {
       fs.unlinkSync(localFilePath)
     }
 };
+
+export const deleteImageCloudinary = async (publicId) =>{
+  try {
+    const del = await cloudinary.uploader.destroy(publicId, {
+      resource_type : "image"
+    })
+    return del;
+  } catch (error) {
+    console.error(error);
+  }
+}
   
