@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from "mongoose";
 import bcrypt from "bcryptjs";
 import jwt, { SignOptions } from "jsonwebtoken";
 
-interface IUser extends Document {
+export interface IUser extends Document {
   username: string;
   email: string;
   fullName: string;
