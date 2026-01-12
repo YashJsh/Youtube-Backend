@@ -50,6 +50,11 @@ web_modules/
 # TypeScript cache
 *.tsbuildinfo
 
+# Compiled JavaScript output
+dist/
+**/*.js
+!**/*.d.ts
+
 # Optional npm cache directory
 .npm
 
