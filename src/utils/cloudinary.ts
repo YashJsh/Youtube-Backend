@@ -1,6 +1,7 @@
 import { v2 as cloudinary } from "cloudinary";
 import fs from "fs";
 import dotenv from "dotenv";
+import type { UploadApiResponse } from "cloudinary"
 
 dotenv.config();
 
@@ -27,6 +28,7 @@ export const uploadImageCloudinary = async (
     if (!localFilePath) return null;
     const result = await cloudinary.uploader.upload(localFilePath, options);
     console.log(result);
+    fs.unlinkSync(localFilePath);
     return result;
   } catch (error) {
     console.error(error);
@@ -34,6 +36,25 @@ export const uploadImageCloudinary = async (
     return null;
   }
 };
+
+export const uploadVideoCloudinary = async(localFilePath : string)=>{
+  try {
+    if (!localFilePath) return null;
+    const result = await cloudinary.uploader.upload_large(localFilePath, {
+      unique_filename : true,
+      overwrite : true,
+      resource_type : "video",
+       folder: "videos"
+    }) as UploadApiResponse;
+  
+    fs.unlinkSync(localFilePath);
+    return result;
+  } catch (error) {
+    console.error(error);
+    fs.unlinkSync(localFilePath);
+    return null;
+  }
+}
 
 export const deleteImageCloudinary = async (publicId: string) => {
   try {
