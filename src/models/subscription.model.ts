@@ -1,4 +1,5 @@
 import mongoose, { Schema, Document } from "mongoose";
+import mongooseAggregatePaginate from "mongoose-aggregate-paginate-v2";
 
 interface ISubscription extends Document {
   subscriber: mongoose.Types.ObjectId;
@@ -20,6 +21,8 @@ const subscriptionSchema = new Schema<ISubscription>(
     timestamps: true,
   }
 );
+
+subscriptionSchema.plugin(mongooseAggregatePaginate);
 
 export const Subscription = mongoose.model<ISubscription>(
   "Subscription",
